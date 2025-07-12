@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>?? Fusion 360 Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .button-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-remote {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .btn-remote:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.4);
+        }
+        .info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 5px solid #667eea;
+        }
+        .info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .info p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .feature {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .feature h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? Fusion 360 Control Panel</h1>
+        <p class="subtitle">Choose your control interface</p>
+        
+        <div class="button-grid">
+            <a href="online-index.html" class="btn">
+                ?? Local Control Interface
+            </a>
+            <a href="remote-control.html" class="btn btn-remote">
+                ?? Remote Control Interface
+            </a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h4>?? Local Control</h4>
+                <p>Direct integration with Fusion 360. Use within the add-in for immediate control.</p>
+            </div>
+            <div class="feature">
+                <h4>?? Remote Control</h4>
+                <p>Control Fusion 360 from any browser on the internet via WebSocket connection.</p>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>?? Setup Instructions:</h3>
+            <p><strong>Local Control:</strong> Load this in Fusion 360 add-in<br>
+            <strong>Remote Control:</strong> Start WebSocket server first (debug-start-server.bat)</p>
+        </div>
+    </div>
+</body>
+</html>

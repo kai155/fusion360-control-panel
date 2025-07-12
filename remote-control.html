@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 Fusion 360 Remote Control - Internet Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .connection-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connection-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .connection-form input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .connection-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .control-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .control-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.destructive {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .control-btn.destructive:hover {
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+        }
+
+        .control-btn.primary:hover {
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .logs {
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .log-entry.success {
+            background: rgba(40, 167, 69, 0.2);
+            border-left: 3px solid #28a745;
+        }
+
+        .log-entry.error {
+            background: rgba(220, 53, 69, 0.2);
+            border-left: 3px solid #dc3545;
+        }
+
+        .log-entry.info {
+            background: rgba(0, 123, 255, 0.2);
+            border-left: 3px solid #007bff;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .connection-form {
+                flex-direction: column;
+            }
+            
+            .connection-form input {
+                min-width: auto;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Fusion 360 Remote Control</h1>
+            <p>Điều khiển Fusion 360 từ xa qua Internet Browser</p>
+        </div>
+
+        <div class="connection-panel">
+            <div class="connection-status">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Disconnected</span>
+                </div>
+                <span id="serverInfo">Not connected</span>
+            </div>
+            
+            <div class="connection-form">
+                <input type="text" id="serverUrl" placeholder="WebSocket Server URL (e.g., ws://localhost:8765)" value="ws://localhost:8765">
+                <button class="btn" id="connectBtn" onclick="toggleConnection()">CONNECT</button>
+            </div>
+        </div>
+
+        <div class="controls-grid">
+            <!-- File Operations -->
+            <div class="control-section">
+                <h3>📁 File Operations</h3>
+                <div class="control-buttons">
+                    <button class="control-btn primary" onclick="sendCommand('new_document')">New Document</button>
+                    <button class="control-btn primary" onclick="sendCommand('save_document')">Save Document</button>
+                    <button class="control-btn primary" onclick="sendCommand('open_document')">Open Document</button>
+                    <button class="control-btn destructive" onclick="sendCommand('close_document')">Close Document</button>
+                </div>
+            </div>
+
+            <!-- View Controls -->
+            <div class="control-section">
+                <h3>👁️ View Controls</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="sendCommand('fit_view')">Fit View</button>
+                    <button class="control-btn" onclick="sendCommand('zoom_in')">Zoom In</button>
+                    <button class="control-btn" onclick="sendCommand('zoom_out')">Zoom Out</button>
+                    <button class="control-btn" onclick="sendCommand('home_view')">Home View</button>
+                </div>
+            </div>
+
+            <!-- Basic Shapes -->
+            <div class="control-section">
+                <h3>🔷 Basic Shapes</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="sendCommand('create_box')">Create Box</button>
+                    <button class="control-btn" onclick="sendCommand('create_cylinder')">Create Cylinder</button>
+                    <button class="control-btn" onclick="sendCommand('create_sphere')">Create Sphere</button>
+                    <button class="control-btn" onclick="sendCommand('create_cone')">Create Cone</button>
+                </div>
+            </div>
+
+            <!-- Sketch Tools -->
+            <div class="control-section">
+                <h3>✏️ Sketch Tools</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="sendCommand('create_sketch')">Create Sketch</button>
+                    <button class="control-btn" onclick="sendCommand('draw_line')">Draw Line</button>
+                    <button class="control-btn" onclick="sendCommand('draw_circle')">Draw Circle</button>
+                    <button class="control-btn" onclick="sendCommand('draw_rectangle')">Draw Rectangle</button>
+                </div>
+            </div>
+
+            <!-- 3D Operations -->
+            <div class="control-section">
+                <h3>🏗️ 3D Operations</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="sendCommand('extrude_feature')">Extrude</button>
+                    <button class="control-btn" onclick="sendCommand('revolve_feature')">Revolve</button>
+                    <button class="control-btn" onclick="sendCommand('sweep_feature')">Sweep</button>
+                    <button class="control-btn" onclick="sendCommand('loft_feature')">Loft</button>
+                </div>
+            </div>
+
+            <!-- Modify Tools -->
+            <div class="control-section">
+                <h3>🔧 Modify Tools</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="sendCommand('fillet_edges')">Fillet</button>
+                    <button class="control-btn" onclick="sendCommand('chamfer_edges')">Chamfer</button>
+                    <button class="control-btn" onclick="sendCommand('shell_body')">Shell</button>
+                    <button class="control-btn destructive" onclick="sendCommand('delete_selected')">Delete Selected</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs" id="logs">
+            <div class="log-entry info">🌐 Remote Control Interface Ready</div>
+            <div class="log-entry info">📡 Enter server URL and click CONNECT to start</div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 Fusion 360 Remote Control System | 💻 Control from anywhere with internet</p>
+            <p>⚡ Real-time WebSocket connection | 🔒 Secure command transmission</p>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logs.appendChild(logEntry);
+            logs.scrollTop = logs.scrollHeight;
+
+            // Keep only last 50 log entries
+            while (logs.children.length > 50) {
+                logs.removeChild(logs.firstChild);
+            }
+        }
+
+        function updateConnectionStatus(connected, info = '') {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const serverInfo = document.getElementById('serverInfo');
+            const connectBtn = document.getElementById('connectBtn');
+
+            isConnected = connected;
+
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+                serverInfo.textContent = info || 'WebSocket server connected';
+                connectBtn.textContent = 'DISCONNECT';
+                connectBtn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                serverInfo.textContent = info || 'Not connected';
+                connectBtn.textContent = 'CONNECT';
+                connectBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+
+            // Enable/disable control buttons
+            const controlButtons = document.querySelectorAll('.control-btn');
+            controlButtons.forEach(btn => {
+                btn.disabled = !connected;
+            });
+        }
+
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            if (!serverUrl) {
+                log('❌ Please enter a valid server URL', 'error');
+                return;
+            }
+
+            log(`🔌 Connecting to ${serverUrl}...`, 'info');
+
+            try {
+                socket = new WebSocket(serverUrl);
+
+                socket.onopen = function(event) {
+                    log('✅ Connected to WebSocket server', 'success');
+                    updateConnectionStatus(true, serverUrl);
+                    
+                    // Register as browser client
+                    socket.send(JSON.stringify({
+                        type: 'register',
+                        client_type: 'browser'
+                    }));
+                };
+
+                socket.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(`📨 Received: ${data.message || JSON.stringify(data)}`, 'success');
+                    } catch (e) {
+                        log(`📨 Received: ${event.data}`, 'info');
+                    }
+                };
+
+                socket.onerror = function(error) {
+                    log(`❌ WebSocket error: ${error}`, 'error');
+                };
+
+                socket.onclose = function(event) {
+                    log('🔌 WebSocket connection closed', 'info');
+                    updateConnectionStatus(false, 'Connection closed');
+                    socket = null;
+                };
+
+            } catch (error) {
+                log(`❌ Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            updateConnectionStatus(false, 'Manually disconnected');
+            log('🔌 Disconnected from server', 'info');
+        }
+
+        function sendCommand(command, params = {}) {
+            if (!isConnected || !socket) {
+                log('❌ Not connected to server', 'error');
+                return;
+            }
+
+            const message = {
+                type: 'command',
+                command: command,
+                params: params,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                socket.send(JSON.stringify(message));
+                log(`🚀 Command sent: ${command}`, 'success');
+            } catch (error) {
+                log(`❌ Failed to send command: ${error.message}`, 'error');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (!isConnected) return;
+
+            if (event.ctrlKey) {
+                switch (event.key.toLowerCase()) {
+                    case 's':
+                        event.preventDefault();
+                        sendCommand('save_document');
+                        break;
+                    case 'n':
+                        event.preventDefault();
+                        sendCommand('new_document');
+                        break;
+                    case 'o':
+                        event.preventDefault();
+                        sendCommand('open_document');
+                        break;
+                    case 'f':
+                        event.preventDefault();
+                        sendCommand('fit_view');
+                        break;
+                }
+            }
+        });
+
+        // Initialize
+        updateConnectionStatus(false);
+        log('🌐 Remote Control Interface loaded', 'info');
+        log('💡 Enter server URL and click CONNECT to start controlling Fusion 360', 'info');
+
+        // Auto-connect if URL is pre-filled
+        window.addEventListener('load', function() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            if (serverUrl && serverUrl !== 'ws://localhost:8765') {
+                setTimeout(() => {
+                    log('🔄 Auto-connecting to pre-configured server...', 'info');
+                    connect();
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

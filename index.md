@@ -8,10 +8,15 @@ description: Control Autodesk Fusion 360 remotely from any web browser
 🚀 **Remote control system for Autodesk Fusion 360**
 
 ## 📱 Live Demo
-- **Bridge System**: [Remote Control Interface](https://kai155.github.io/fusion360-control-panel/remote-control.html)
-- **WebSocket System**: [Browser Interface](https://kai155.github.io/fusion360-control-panel/remote-control-browser.html)
+- **NEW Bridge System**: [Bridge Control Interface](https://kai155.github.io/fusion360-control-panel/bridge-control.html) ⭐ **RECOMMENDED**
+- **Legacy WebSocket**: [WebSocket Interface](https://kai155.github.io/fusion360-control-panel/remote-control-browser.html)
 
-## 🔧 Setup Instructions
+## ⚠️ Important Notice
+**Use the BRIDGE SYSTEM, not WebSocket!**
+- Bridge uses HTTP (port 8766) - No dependencies needed
+- WebSocket uses ws:// (port 8765) - Requires websocket-client package
+
+## 🔧 Quick Setup
 
 ### 1. Download & Install
 ```bash
@@ -19,12 +24,17 @@ git clone https://github.com/kai155/fusion360-control-panel.git
 cd fusion360-control-panel
 ```
 
-### 2. Start Bridge Server
+### 2. Start Bridge Server (Recommended)
 ```bash
 start-bridge-server.bat
 ```
 
-### 3. Load Fusion 360 Add-in
+### 3. Open Web Interface
+- Local: http://localhost:8766
+- Online: [Bridge Control Interface](https://kai155.github.io/fusion360-control-panel/bridge-control.html)
+- Enter `http://localhost:8766` and click Connect
+
+### 4. Load Fusion 360 Add-in
 1. Open Fusion 360
 2. Go to **UTILITIES** → **ADD-INS**
 3. Select **HTLM** → **Run**

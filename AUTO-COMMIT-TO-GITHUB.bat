@@ -44,15 +44,15 @@ if not exist ".git" (
     git init
     echo ✅ Git repository initialized
     echo.
+    
+    echo 📋 Setting up Git configuration...
+    git config user.name "Kai155"
+    git config user.email "mr.khai@live.com"
+    echo ✅ Git user configured
+    
     echo 📋 Setting up GitHub remote...
-    set /p github_url="Enter GitHub repository URL (https://github.com/username/repo.git): "
-    if not "%github_url%"=="" (
-        git remote add origin %github_url%
-        echo ✅ GitHub remote added: %github_url%
-    ) else (
-        echo ⚠️  No remote URL provided. You can add it later with:
-        echo    git remote add origin https://github.com/username/repo.git
-    )
+    git remote add origin https://github.com/kai155/fusion360-control-panel.git
+    echo ✅ GitHub remote added: https://github.com/kai155/fusion360-control-panel.git
     echo.
 )
 

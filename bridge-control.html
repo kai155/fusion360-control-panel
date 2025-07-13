@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎮 Fusion 360 Bridge Control - Updated</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        
+        .server-config {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        
+        .server-config input {
+            padding: 10px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .connected { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .disconnected { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+        .waiting { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+        
+        .section {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: 2px solid #f0f0f0;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; }
+        
+        .notice {
+            background: #fff9c4;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .container { margin: 10px; padding: 20px; }
+            .grid { grid-template-columns: 1fr; }
+            .server-config input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Fusion 360 Bridge Control</h1>
+            <p>HTTP Bridge System - No WebSocket Required!</p>
+        </div>
+
+        <div class="notice">
+            <h3>🔧 This is the BRIDGE SYSTEM - Not WebSocket!</h3>
+            <p>No need for WebSocket connections. Uses HTTP POST to communicate with local bridge server.</p>
+        </div>
+
+        <div class="server-config">
+            <h3>🔧 Bridge Server Configuration</h3>
+            <label>Bridge Server URL (NOT WebSocket):</label><br>
+            <input type="text" id="serverUrl" value="http://localhost:8766" placeholder="http://localhost:8766">
+            <button class="btn btn-primary" onclick="connect()">🔗 Connect to Bridge</button>
+            <br><small>💡 Make sure BRIDGE server is running: <code>start-bridge-server.bat</code></small>
+            <br><small>⚠️ Port 8766 for BRIDGE, NOT 8765 for WebSocket!</small>
+        </div>
+
+        <div id="status" class="status waiting">
+            <span id="status-text">⚡ Enter bridge server URL and click Connect to start</span>
+        </div>
+
+        <div class="section">
+            <h2>📁 File Operations</h2>
+            <div class="grid">
+                <button class="btn btn-primary" onclick="sendCommand('new_document')">📄 New Document</button>
+                <button class="btn btn-primary" onclick="sendCommand('save_document')">💾 Save Document</button>
+                <button class="btn btn-info" onclick="sendCommand('open_document')">📂 Open Document</button>
+                <button class="btn btn-warning" onclick="sendCommand('close_document')">❌ Close Document</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👁️ View Controls</h2>
+            <div class="grid">
+                <button class="btn btn-success" onclick="sendCommand('fit_view')">🔍 Fit View</button>
+                <button class="btn btn-success" onclick="sendCommand('zoom_in')">🔍➕ Zoom In</button>
+                <button class="btn btn-success" onclick="sendCommand('zoom_out')">🔍➖ Zoom Out</button>
+                <button class="btn btn-success" onclick="sendCommand('home_view')">🏠 Home View</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔷 Basic Shapes</h2>
+            <div class="grid">
+                <button class="btn btn-success" onclick="sendCommand('create_box')">📦 Create Box</button>
+                <button class="btn btn-success" onclick="sendCommand('create_cylinder')">🥫 Create Cylinder</button>
+                <button class="btn btn-success" onclick="sendCommand('create_sphere')">⚪ Create Sphere</button>
+                <button class="btn btn-success" onclick="sendCommand('create_cone')">🔺 Create Cone</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✏️ Sketch Tools</h2>
+            <div class="grid">
+                <button class="btn btn-warning" onclick="sendCommand('create_sketch')">✏️ Create Sketch</button>
+                <button class="btn btn-warning" onclick="sendCommand('draw_line')">📏 Draw Line</button>
+                <button class="btn btn-warning" onclick="sendCommand('draw_circle')">⭕ Draw Circle</button>
+                <button class="btn btn-warning" onclick="sendCommand('draw_rectangle')">▭ Draw Rectangle</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ 3D Operations</h2>
+            <div class="grid">
+                <button class="btn btn-info" onclick="sendCommand('extrude')">↗️ Extrude</button>
+                <button class="btn btn-info" onclick="sendCommand('revolve')">🔄 Revolve</button>
+                <button class="btn btn-info" onclick="sendCommand('sweep')">〰️ Sweep</button>
+                <button class="btn btn-info" onclick="sendCommand('loft')">🏔️ Loft</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Modify Tools</h2>
+            <div class="grid">
+                <button class="btn btn-warning" onclick="sendCommand('fillet')">🔄 Fillet</button>
+                <button class="btn btn-warning" onclick="sendCommand('chamfer')">✂️ Chamfer</button>
+                <button class="btn btn-warning" onclick="sendCommand('shell')">🐚 Shell</button>
+                <button class="btn btn-danger" onclick="sendCommand('delete_selected')">🗑️ Delete Selected</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 Fusion 360 Bridge Control System | 💻 HTTP-based, no WebSocket needed</p>
+            <p>⚡ Direct HTTP communication | 🔒 Secure command transmission</p>
+        </div>
+    </div>
+
+    <script>
+        let connected = false;
+        let serverUrl = 'http://localhost:8766';
+
+        function updateStatus(isConnected, message) {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            
+            connected = isConnected;
+            statusText.textContent = message;
+            
+            if (isConnected) {
+                statusDiv.className = 'status connected';
+            } else if (message.includes('Enter') || message.includes('click Connect')) {
+                statusDiv.className = 'status waiting';
+            } else {
+                statusDiv.className = 'status disconnected';
+            }
+            
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+        }
+
+        function connect() {
+            const urlInput = document.getElementById('serverUrl');
+            serverUrl = urlInput.value.trim();
+            
+            if (!serverUrl) {
+                alert('Please enter bridge server URL');
+                return;
+            }
+            
+            updateStatus(false, '🔄 Connecting to bridge server...');
+            testConnection();
+        }
+
+        function sendCommand(action) {
+            if (!connected) {
+                alert('❌ Not connected! Please connect to bridge server first.');
+                return;
+            }
+            
+            const url = `${serverUrl}/command`;
+            const payload = {
+                action: action,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log(`[${new Date().toLocaleTimeString()}] 📤 Sending bridge command: ${action}`);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .then(data => {
+                console.log(`[${new Date().toLocaleTimeString()}] ✅ Bridge command sent: ${action}`);
+                updateStatus(true, `✅ Connected to Bridge Server: ${serverUrl}`);
+            })
+            .catch(error => {
+                console.error(`[${new Date().toLocaleTimeString()}] ❌ Bridge command failed:`, error);
+                updateStatus(false, '❌ Bridge connection lost - Check server');
+            });
+        }
+
+        function testConnection() {
+            const url = `${serverUrl}/command`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: 'test_bridge_connection' })
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateStatus(true, `✅ Bridge Connected: ${serverUrl}`);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .catch(error => {
+                updateStatus(false, '❌ Cannot connect to bridge server - Make sure start-bridge-server.bat is running');
+                console.error('Bridge connection test failed:', error);
+            });
+        }
+
+        // Auto-load message
+        window.addEventListener('load', function() {
+            updateStatus(false, '🌐 Bridge Control Interface loaded');
+            setTimeout(() => {
+                updateStatus(false, '💡 Enter bridge server URL and click CONNECT to start controlling Fusion 360');
+            }, 1000);
+        });
+
+        // Periodic connection check when connected
+        setInterval(() => {
+            if (connected) {
+                testConnection();
+            }
+        }, 15000); // Check every 15 seconds
+    </script>
+</body>
+</html>

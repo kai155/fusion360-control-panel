@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head><title>Fusion 360 Bridge</title>
+<style>
+body{font-family:Arial;margin:20px;background:#f5f5f5}
+.container{max-width:800px;margin:0 auto}
+.status{padding:10px;border-radius:5px;margin:10px 0}
+.connected{background:#d4edda;color:#155724}
+.disconnected{background:#f8d7da;color:#721c24}
+.section{background:white;padding:20px;margin:10px 0;border-radius:8px}
+.btn{padding:10px 20px;margin:5px;border:none;border-radius:5px;cursor:pointer}
+.btn-primary{background:#007bff;color:white}
+.btn-success{background:#28a745;color:white}
+.btn-warning{background:#ffc107;color:black}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+</style></head>
+<body><div class="container">
+<h1>🎮 Fusion 360 Bridge Control</h1>
+<div id="status" class="status disconnected"><span id="status-text">Connecting...</span></div>
+<div class="section"><h2>🔷 Basic Shapes</h2><div class="grid">
+<button class="btn btn-success" onclick="sendCommand^('create_box'^)">Create Box</button>
+<button class="btn btn-success" onclick="sendCommand^('create_cylinder'^)">Create Cylinder</button>
+<button class="btn btn-success" onclick="sendCommand^('create_sphere'^)">Create Sphere</button>
+<button class="btn btn-success" onclick="sendCommand^('create_cone'^)">Create Cone</button>
+</div></div>
+<div class="section"><h2>📁 File Operations</h2><div class="grid">
+<button class="btn btn-primary" onclick="sendCommand^('new_document'^)">New Document</button>
+<button class="btn btn-primary" onclick="sendCommand^('save_document'^)">Save Document</button>
+<button class="btn btn-success" onclick="sendCommand^('fit_view'^)">Fit View</button>
+<button class="btn btn-warning" onclick="sendCommand^('create_sketch'^)">Create Sketch</button>
+</div></div></div>
+<script>
+let connected=false;
+function updateStatus(c,t){
+const s=document.getElementById('status');
+const st=document.getElementById('status-text');
+connected=c;st.textContent=t;
+s.className=c?'status connected':'status disconnected';
+}
+function sendCommand(action){
+if(!connected){alert('Not connected!');return;}
+fetch('/command',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:action,timestamp:new Date().toISOString()})
+}).then(r=>r.json()).then(d=>console.log('✅',action)).catch(e=>updateStatus(false,'Disconnected'));
+}
+function test(){
+fetch('/command',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:'test'})}).then(r=>r.ok?updateStatus(true,'Connected'):updateStatus(false,'Error'))
+.catch(e=>updateStatus(false,'Server Not Running'));
+}
+test();setInterval(test,5000);
+</script></body></html>

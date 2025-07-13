@@ -1,0 +1,25 @@
+# GitHub Pages Setup - Command Line Instructions
+
+# 1. Initialize Git in your project folder
+cd "C:\Users\Admin\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\AddIns\HTLM"
+git init
+
+# 2. Add files
+git add commands/paletteShow/resources/html/online-index.html
+git add README-ONLINE.md
+
+# 3. Commit
+git commit -m "Add Fusion 360 HTML Control Panel"
+
+# 4. Add GitHub remote (replace YOUR-USERNAME and REPO-NAME)
+git remote add origin https://github.com/YOUR-USERNAME/fusion360-control-panel.git
+
+# 5. Push to GitHub
+git branch -M main
+git push -u origin main
+
+# Alternative: If you want to upload just the HTML file
+# Create a simple folder structure:
+# fusion360-control-panel/
+#   ├── online-index.html
+#   └── README.md

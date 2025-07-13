@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fusion 360 Control Panel</title>
+    <script src="static/palette.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 100%;
+        }
+        
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .result-box {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-wrap: break-word;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            margin-right: 10px;
+        }
+        
+        .coordinates {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="status-indicator"></span>Fusion 360 Control Panel</h1>
+        
+        <!-- Sketch Commands -->
+        <div class="section">
+            <h3>🎨 Sketch Commands</h3>
+            <div class="button-group">
+                <button onclick="createNewSketch()">New Sketch</button>
+                <button onclick="drawLine()">Draw Line</button>
+                <button onclick="drawRectangle()">Rectangle</button>
+                <button onclick="drawCircle()">Circle</button>
+                <button onclick="finishSketch()">Finish Sketch</button>
+            </div>
+        </div>
+        
+        <!-- 3D Modeling -->
+        <div class="section">
+            <h3>🔧 3D Modeling</h3>
+            <div class="control-group">
+                <label for="extrudeDistance">Extrude Distance (mm):</label>
+                <input type="number" id="extrudeDistance" value="10" min="0.1" step="0.1">
+            </div>
+            <div class="button-group">
+                <button onclick="extrudeFeature()">Extrude</button>
+                <button onclick="revolveFeature()">Revolve</button>
+                <button onclick="sweepFeature()">Sweep</button>
+                <button onclick="loftFeature()">Loft</button>
+            </div>
+        </div>
+        
+        <!-- Primitive Shapes -->
+        <div class="section">
+            <h3>📦 Create Primitives</h3>
+            <div class="grid">
+                <div class="control-group">
+                    <label for="boxDimensions">Box (L×W×H mm):</label>
+                    <div class="coordinates">
+                        <input type="number" id="boxLength" value="20" placeholder="Length">
+                        <input type="number" id="boxWidth" value="20" placeholder="Width">
+                        <input type="number" id="boxHeight" value="20" placeholder="Height">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="cylinderProps">Cylinder:</label>
+                    <div class="coordinates">
+                        <input type="number" id="cylRadius" value="10" placeholder="Radius">
+                        <input type="number" id="cylHeight" value="20" placeholder="Height">
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="createBox()">Create Box</button>
+                <button onclick="createCylinder()">Create Cylinder</button>
+                <button onclick="createSphere()">Create Sphere</button>
+            </div>
+        </div>
+        
+        <!-- View Controls -->
+        <div class="section">
+            <h3>👁️ View Controls</h3>
+            <div class="button-group">
+                <button onclick="fitView()">Fit All</button>
+                <button onclick="zoomToSelected()">Zoom to Selection</button>
+                <button onclick="viewHome()">Home View</button>
+                <button onclick="viewTop()">Top View</button>
+                <button onclick="viewFront()">Front View</button>
+                <button onclick="viewRight()">Right View</button>
+            </div>
+        </div>
+        
+        <!-- File Operations -->
+        <div class="section">
+            <h3>💾 File Operations</h3>
+            <div class="control-group">
+                <label for="fileName">File Name:</label>
+                <input type="text" id="fileName" value="MyModel" placeholder="Enter file name">
+            </div>
+            <div class="button-group">
+                <button onclick="saveModel()">Save Model</button>
+                <button onclick="exportSTL()">Export STL</button>
+                <button onclick="exportStep()">Export STEP</button>
+                <button onclick="newDocument()">New Document</button>
+            </div>
+        </div>
+        
+        <!-- Custom Command -->
+        <div class="section">
+            <h3>⚙️ Custom Commands</h3>
+            <div class="control-group">
+                <label for="customCommand">Custom Command:</label>
+                <textarea id="customCommand" rows="3" placeholder="Enter custom Python command for Fusion 360"></textarea>
+            </div>
+            <div class="control-group">
+                <label for="commandParams">Parameters (JSON):</label>
+                <textarea id="commandParams" rows="2" placeholder='{"param1": "value1", "param2": 123}'></textarea>
+            </div>
+            <button onclick="executeCustomCommand()">Execute Command</button>
+        </div>
+        
+        <!-- Response -->
+        <div class="section">
+            <h3>📡 Response from Fusion 360</h3>
+            <div id="returnValue" class="result-box">Waiting for response...</div>
+        </div>
+        
+        <!-- Messages -->
+        <div class="section">
+            <h3>💬 Messages</h3>
+            <div id="fusionMessage" class="result-box">No messages yet</div>
+        </div>
+    </div>
+</body>
+</html>

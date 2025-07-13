@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion 360 Control Panel</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .result-box {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-wrap: break-word;
+            min-height: 50px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            margin-right: 10px;
+        }
+        
+        .coordinates {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .connection-status {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .connection-status.connected {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .connection-status.disconnected {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="status-indicator" id="statusIndicator"></span>Fusion 360 Control Panel</h1>
+        
+        <div class="connection-status" id="connectionStatus">
+            🔄 Checking connection to Fusion 360...
+        </div>
+        
+        <!-- Sketch Commands -->
+        <div class="section">
+            <h3>🎨 Sketch Commands</h3>
+            <div class="button-group">
+                <button onclick="createNewSketch()">New Sketch</button>
+                <button onclick="drawLine()">Draw Line</button>
+                <button onclick="drawRectangle()">Rectangle</button>
+                <button onclick="drawCircle()">Circle</button>
+                <button onclick="finishSketch()">Finish Sketch</button>
+            </div>
+        </div>
+        
+        <!-- 3D Modeling -->
+        <div class="section">
+            <h3>🔧 3D Modeling</h3>
+            <div class="control-group">
+                <label for="extrudeDistance">Extrude Distance (mm):</label>
+                <input type="number" id="extrudeDistance" value="10" min="0.1" step="0.1">
+            </div>
+            <div class="button-group">
+                <button onclick="extrudeFeature()">Extrude</button>
+                <button onclick="revolveFeature()">Revolve</button>
+                <button onclick="sweepFeature()">Sweep</button>
+                <button onclick="loftFeature()">Loft</button>
+            </div>
+        </div>
+        
+        <!-- Primitive Shapes -->
+        <div class="section">
+            <h3>📦 Create Primitives</h3>
+            <div class="grid">
+                <div class="control-group">
+                    <label for="boxDimensions">Box (L×W×H mm):</label>
+                    <div class="coordinates">
+                        <input type="number" id="boxLength" value="20" placeholder="Length">
+                        <input type="number" id="boxWidth" value="20" placeholder="Width">
+                        <input type="number" id="boxHeight" value="20" placeholder="Height">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="cylinderProps">Cylinder:</label>
+                    <div class="coordinates">
+                        <input type="number" id="cylRadius" value="10" placeholder="Radius">
+                        <input type="number" id="cylHeight" value="20" placeholder="Height">
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="createBox()">Create Box</button>
+                <button onclick="createCylinder()">Create Cylinder</button>
+                <button onclick="createSphere()">Create Sphere</button>
+            </div>
+        </div>
+        
+        <!-- View Controls -->
+        <div class="section">
+            <h3>👁️ View Controls</h3>
+            <div class="button-group">
+                <button onclick="fitView()">Fit All</button>
+                <button onclick="zoomToSelected()">Zoom to Selection</button>
+                <button onclick="viewHome()">Home View</button>
+                <button onclick="viewTop()">Top View</button>
+                <button onclick="viewFront()">Front View</button>
+                <button onclick="viewRight()">Right View</button>
+            </div>
+        </div>
+        
+        <!-- File Operations -->
+        <div class="section">
+            <h3>💾 File Operations</h3>
+            <div class="control-group">
+                <label for="fileName">File Name:</label>
+                <input type="text" id="fileName" value="MyModel" placeholder="Enter file name">
+            </div>
+            <div class="button-group">
+                <button onclick="saveModel()">Save Model</button>
+                <button onclick="exportSTL()">Export STL</button>
+                <button onclick="exportStep()">Export STEP</button>
+                <button onclick="newDocument()">New Document</button>
+            </div>
+        </div>
+        
+        <!-- Custom Command -->
+        <div class="section">
+            <h3>⚙️ Custom Commands</h3>
+            <div class="control-group">
+                <label for="customCommand">Custom Command:</label>
+                <textarea id="customCommand" rows="3" placeholder="Enter custom Python command for Fusion 360"></textarea>
+            </div>
+            <div class="control-group">
+                <label for="commandParams">Parameters (JSON):</label>
+                <textarea id="commandParams" rows="2" placeholder='{"param1": "value1", "param2": 123}'></textarea>
+            </div>
+            <button onclick="executeCustomCommand()">Execute Command</button>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="section">
+            <h3>⚡ Quick Actions</h3>
+            <div class="button-group">
+                <button onclick="quickDemo()">Demo Workflow</button>
+                <button onclick="clearAll()">Clear All</button>
+                <button onclick="refreshConnection()">Refresh Connection</button>
+                <button onclick="toggleTheme()">Toggle Theme</button>
+            </div>
+        </div>
+        
+        <!-- Response -->
+        <div class="section">
+            <h3>📡 Response from Fusion 360</h3>
+            <div id="returnValue" class="result-box">Waiting for response...</div>
+        </div>
+        
+        <!-- Messages -->
+        <div class="section">
+            <h3>💬 Messages</h3>
+            <div id="fusionMessage" class="result-box">No messages yet</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isConnected = false;
+        let isDarkTheme = false;
+        
+        // Utility functions
+        function getDateString() {
+            const today = new Date();
+            const date = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+            const time = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+            return `Date: ${date}, Time: ${time}`;
+        }
+
+        function updateReturnValue(message) {
+            document.getElementById("returnValue").innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            const indicatorEl = document.getElementById('statusIndicator');
+            
+            if (connected) {
+                statusEl.className = 'connection-status connected';
+                statusEl.innerHTML = '✅ Connected to Fusion 360';
+                indicatorEl.style.background = '#48bb78';
+                isConnected = true;
+            } else {
+                statusEl.className = 'connection-status disconnected';
+                statusEl.innerHTML = '❌ Not connected to Fusion 360. Make sure the add-in is running.';
+                indicatorEl.style.background = '#e53e3e';
+                isConnected = false;
+            }
+        }
+
+        function sendCommandToFusion(action, data = {}) {
+            if (!isConnected && typeof adsk === 'undefined') {
+                updateReturnValue('❌ Not connected to Fusion 360. Please ensure the add-in is running.');
+                return Promise.reject('Not connected');
+            }
+            
+            const payload = {
+                action: action,
+                data: data,
+                timestamp: getDateString()
+            };
+            
+            // Show loading state
+            updateReturnValue('<span class="spinner"></span>Processing...');
+            
+            // Check if running in Fusion 360 context
+            if (typeof adsk !== 'undefined' && adsk.fusionSendData) {
+                return adsk.fusionSendData(action, JSON.stringify(payload)).then((result) => {
+                    updateReturnValue(result);
+                    updateConnectionStatus(true);
+                    return result;
+                }).catch((error) => {
+                    updateReturnValue(`Error: ${error}`);
+                    console.error('Command failed:', error);
+                    updateConnectionStatus(false);
+                });
+            } else {
+                // Demo mode for web browser
+                setTimeout(() => {
+                    updateReturnValue(`Demo mode: Would execute ${action} with data: ${JSON.stringify(data)}`);
+                }, 1000);
+                return Promise.resolve('Demo response');
+            }
+        }
+
+        // Original function for compatibility
+        function sendInfoToFusion() {
+            const args = {
+                arg1: document.getElementById("sampleData")?.value || "test data",
+                arg2: getDateString()
+            };
+            sendCommandToFusion("messageFromPalette", args);
+        }
+
+        // Sketch Commands
+        function createNewSketch() {
+            sendCommandToFusion("createNewSketch");
+        }
+
+        function drawLine() {
+            sendCommandToFusion("drawLine");
+        }
+
+        function drawRectangle() {
+            sendCommandToFusion("drawRectangle");
+        }
+
+        function drawCircle() {
+            sendCommandToFusion("drawCircle");
+        }
+
+        function finishSketch() {
+            sendCommandToFusion("finishSketch");
+        }
+
+        // 3D Modeling Commands
+        function extrudeFeature() {
+            const distance = document.getElementById("extrudeDistance").value;
+            sendCommandToFusion("extrudeFeature", { distance: parseFloat(distance) });
+        }
+
+        function revolveFeature() {
+            sendCommandToFusion("revolveFeature");
+        }
+
+        function sweepFeature() {
+            sendCommandToFusion("sweepFeature");
+        }
+
+        function loftFeature() {
+            sendCommandToFusion("loftFeature");
+        }
+
+        // Primitive Creation
+        function createBox() {
+            const length = document.getElementById("boxLength").value;
+            const width = document.getElementById("boxWidth").value;
+            const height = document.getElementById("boxHeight").value;
+            
+            sendCommandToFusion("createBox", {
+                length: parseFloat(length),
+                width: parseFloat(width),
+                height: parseFloat(height)
+            });
+        }
+
+        function createCylinder() {
+            const radius = document.getElementById("cylRadius").value;
+            const height = document.getElementById("cylHeight").value;
+            
+            sendCommandToFusion("createCylinder", {
+                radius: parseFloat(radius),
+                height: parseFloat(height)
+            });
+        }
+
+        function createSphere() {
+            const radius = document.getElementById("cylRadius").value;
+            sendCommandToFusion("createSphere", { radius: parseFloat(radius) });
+        }
+
+        // View Controls
+        function fitView() {
+            sendCommandToFusion("fitView");
+        }
+
+        function zoomToSelected() {
+            sendCommandToFusion("zoomToSelected");
+        }
+
+        function viewHome() {
+            sendCommandToFusion("viewHome");
+        }
+
+        function viewTop() {
+            sendCommandToFusion("viewTop");
+        }
+
+        function viewFront() {
+            sendCommandToFusion("viewFront");
+        }
+
+        function viewRight() {
+            sendCommandToFusion("viewRight");
+        }
+
+        // File Operations
+        function saveModel() {
+            const fileName = document.getElementById("fileName").value;
+            sendCommandToFusion("saveModel", { fileName: fileName });
+        }
+
+        function exportSTL() {
+            const fileName = document.getElementById("fileName").value;
+            sendCommandToFusion("exportSTL", { fileName: fileName });
+        }
+
+        function exportStep() {
+            const fileName = document.getElementById("fileName").value;
+            sendCommandToFusion("exportStep", { fileName: fileName });
+        }
+
+        function newDocument() {
+            sendCommandToFusion("newDocument");
+        }
+
+        // Custom Commands
+        function executeCustomCommand() {
+            const command = document.getElementById("customCommand").value;
+            let params = {};
+            
+            try {
+                const paramsText = document.getElementById("commandParams").value;
+                if (paramsText.trim()) {
+                    params = JSON.parse(paramsText);
+                }
+            } catch (e) {
+                updateReturnValue("Error: Invalid JSON in parameters");
+                return;
+            }
+            
+            sendCommandToFusion("executeCustomCommand", {
+                command: command,
+                parameters: params
+            });
+        }
+
+        // Quick Actions
+        function quickDemo() {
+            updateReturnValue("Starting demo workflow...");
+            setTimeout(() => createNewSketch(), 500);
+            setTimeout(() => drawRectangle(), 1500);
+            setTimeout(() => finishSketch(), 2500);
+            setTimeout(() => extrudeFeature(), 3500);
+            setTimeout(() => fitView(), 4500);
+        }
+
+        function clearAll() {
+            if (confirm("This will create a new document and clear all work. Continue?")) {
+                newDocument();
+            }
+        }
+
+        function refreshConnection() {
+            updateConnectionStatus(false);
+            updateReturnValue("Checking connection...");
+            
+            // Test connection
+            if (typeof adsk !== 'undefined' && adsk.fusionSendData) {
+                sendCommandToFusion("get_active_design_name").then(() => {
+                    updateConnectionStatus(true);
+                }).catch(() => {
+                    updateConnectionStatus(false);
+                });
+            } else {
+                setTimeout(() => {
+                    updateReturnValue("Running in demo mode (not connected to Fusion 360)");
+                    updateConnectionStatus(false);
+                }, 1000);
+            }
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            document.body.style.filter = isDarkTheme ? 'invert(1) hue-rotate(180deg)' : 'none';
+            updateReturnValue(`Theme switched to ${isDarkTheme ? 'dark' : 'light'} mode`);
+        }
+
+        // Message handling
+        function updateMessage(messageString) {
+            try {
+                const messageData = JSON.parse(messageString);
+                
+                let displayMessage = `<strong>Message received:</strong><br/>`;
+                if (typeof messageData === 'object') {
+                    for (const [key, value] of Object.entries(messageData)) {
+                        displayMessage += `<strong>${key}:</strong> ${value}<br/>`;
+                    }
+                } else {
+                    displayMessage += messageData;
+                }
+                
+                document.getElementById("fusionMessage").innerHTML = displayMessage;
+            } catch (e) {
+                document.getElementById("fusionMessage").innerHTML = `<strong>Raw message:</strong> ${messageString}`;
+            }
+        }
+
+        // Global handler for Fusion 360 communication
+        window.fusionJavaScriptHandler = {
+            handle: function (action, data) {
+                try {
+                    if (action === "updateMessage") {
+                        updateMessage(data);
+                    } else if (action === "debugger") {
+                        debugger;
+                    } else if (action === "showStatus") {
+                        updateReturnValue(data);
+                    } else if (action === "updateUI") {
+                        // Handle UI updates from Fusion
+                        const updateData = JSON.parse(data);
+                        if (updateData.elementId && updateData.value) {
+                            const element = document.getElementById(updateData.elementId);
+                            if (element) {
+                                element.value = updateData.value;
+                            }
+                        }
+                    } else {
+                        console.log(`Unhandled action: ${action}, data: ${data}`);
+                        return `Unhandled command type: ${action}`;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    console.error(`Exception caught with command: ${action}, data: ${data}`);
+                    return `Error processing command: ${action}`;
+                }
+                return "OK";
+            },
+        };
+
+        // Initialize the interface
+        document.addEventListener('DOMContentLoaded', function() {
+            updateReturnValue("Interface loaded. Ready to control Fusion 360!");
+            
+            // Check initial connection
+            refreshConnection();
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            saveModel();
+                            break;
+                        case 'n':
+                            e.preventDefault();
+                            newDocument();
+                            break;
+                        case 'f':
+                            e.preventDefault();
+                            fitView();
+                            break;
+                        case 'd':
+                            e.preventDefault();
+                            quickDemo();
+                            break;
+                    }
+                }
+            });
+            
+            // Auto-refresh connection every 30 seconds
+            setInterval(() => {
+                if (!isConnected) {
+                    refreshConnection();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

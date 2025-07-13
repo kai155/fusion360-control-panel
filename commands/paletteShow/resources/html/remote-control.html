@@ -1,0 +1,549 @@
+"""
+Fusion 360 Remote Control - Web Interface
+HTML interface that can control Fusion 360 from any browser via WebSocket
+"""
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusion 360 Remote Control</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #4a5568;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .connection-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-connected { background: #48bb78; }
+        .status-disconnected { background: #e53e3e; }
+        .status-connecting { background: #ed8936; }
+        
+        .connection-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .result-box {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-wrap: break-word;
+            min-height: 50px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .coordinates {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .connection-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Fusion 360 Remote Control</h1>
+            <p>Control Fusion 360 from anywhere on the internet</p>
+        </div>
+        
+        <!-- Connection Panel -->
+        <div class="connection-panel">
+            <h3>🔌 Connection Settings</h3>
+            <div class="connection-form">
+                <input type="text" id="serverUrl" placeholder="ws://server-ip:8765" value="ws://localhost:8765">
+                <button id="connectBtn" onclick="toggleConnection()">Connect</button>
+            </div>
+            <div id="connectionStatus">
+                <span class="status-indicator status-disconnected"></span>
+                Not connected to Fusion 360 server
+            </div>
+        </div>
+        
+        <!-- Control Panels (hidden until connected) -->
+        <div id="controlPanels" class="hidden">
+            <!-- Sketch Commands -->
+            <div class="section">
+                <h3>🎨 Sketch Commands</h3>
+                <div class="button-group">
+                    <button onclick="sendCommand('createNewSketch')">New Sketch</button>
+                    <button onclick="sendCommand('drawLine')">Draw Line</button>
+                    <button onclick="sendCommand('drawRectangle')">Rectangle</button>
+                    <button onclick="sendCommand('drawCircle')">Circle</button>
+                    <button onclick="sendCommand('finishSketch')">Finish Sketch</button>
+                </div>
+            </div>
+            
+            <!-- 3D Modeling -->
+            <div class="section">
+                <h3>🔧 3D Modeling</h3>
+                <div class="control-group">
+                    <label for="extrudeDistance">Extrude Distance (mm):</label>
+                    <input type="number" id="extrudeDistance" value="10" min="0.1" step="0.1">
+                </div>
+                <div class="button-group">
+                    <button onclick="extrudeFeature()">Extrude</button>
+                    <button onclick="sendCommand('revolveFeature')">Revolve</button>
+                    <button onclick="sendCommand('sweepFeature')">Sweep</button>
+                    <button onclick="sendCommand('loftFeature')">Loft</button>
+                </div>
+            </div>
+            
+            <!-- Primitive Shapes -->
+            <div class="section">
+                <h3>📦 Create Primitives</h3>
+                <div class="grid">
+                    <div class="control-group">
+                        <label>Box (L×W×H mm):</label>
+                        <div class="coordinates">
+                            <input type="number" id="boxLength" value="20" placeholder="Length">
+                            <input type="number" id="boxWidth" value="20" placeholder="Width">
+                            <input type="number" id="boxHeight" value="20" placeholder="Height">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Cylinder:</label>
+                        <div class="coordinates">
+                            <input type="number" id="cylRadius" value="10" placeholder="Radius">
+                            <input type="number" id="cylHeight" value="20" placeholder="Height">
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="createBox()">Create Box</button>
+                    <button onclick="createCylinder()">Create Cylinder</button>
+                    <button onclick="createSphere()">Create Sphere</button>
+                </div>
+            </div>
+            
+            <!-- View Controls -->
+            <div class="section">
+                <h3>👁️ View Controls</h3>
+                <div class="button-group">
+                    <button onclick="sendCommand('fitView')">Fit All</button>
+                    <button onclick="sendCommand('zoomToSelected')">Zoom to Selection</button>
+                    <button onclick="sendCommand('viewHome')">Home View</button>
+                    <button onclick="sendCommand('viewTop')">Top View</button>
+                    <button onclick="sendCommand('viewFront')">Front View</button>
+                    <button onclick="sendCommand('viewRight')">Right View</button>
+                </div>
+            </div>
+            
+            <!-- File Operations -->
+            <div class="section">
+                <h3>💾 File Operations</h3>
+                <div class="control-group">
+                    <label for="fileName">File Name:</label>
+                    <input type="text" id="fileName" value="RemoteModel" placeholder="Enter file name">
+                </div>
+                <div class="button-group">
+                    <button onclick="saveModel()">Save Model</button>
+                    <button onclick="exportSTL()">Export STL</button>
+                    <button onclick="exportStep()">Export STEP</button>
+                    <button onclick="sendCommand('newDocument')">New Document</button>
+                </div>
+            </div>
+            
+            <!-- Response -->
+            <div class="section">
+                <h3>📡 Response from Fusion 360</h3>
+                <div id="responseBox" class="result-box">Waiting for connection...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let isConnected = false;
+        let isConnecting = false;
+        
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            const indicator = statusEl.querySelector('.status-indicator');
+            const connectBtn = document.getElementById('connectBtn');
+            const controlPanels = document.getElementById('controlPanels');
+            
+            indicator.className = 'status-indicator';
+            
+            switch(status) {
+                case 'connected':
+                    indicator.classList.add('status-connected');
+                    statusEl.innerHTML = '<span class="status-indicator status-connected"></span>✅ ' + message;
+                    connectBtn.textContent = 'Disconnect';
+                    connectBtn.disabled = false;
+                    controlPanels.classList.remove('hidden');
+                    isConnected = true;
+                    isConnecting = false;
+                    break;
+                    
+                case 'disconnected':
+                    indicator.classList.add('status-disconnected');
+                    statusEl.innerHTML = '<span class="status-indicator status-disconnected"></span>❌ ' + message;
+                    connectBtn.textContent = 'Connect';
+                    connectBtn.disabled = false;
+                    controlPanels.classList.add('hidden');
+                    isConnected = false;
+                    isConnecting = false;
+                    break;
+                    
+                case 'connecting':
+                    indicator.classList.add('status-connecting');
+                    statusEl.innerHTML = '<span class="status-indicator status-connecting"></span>🔄 ' + message;
+                    connectBtn.textContent = 'Connecting...';
+                    connectBtn.disabled = true;
+                    isConnecting = true;
+                    break;
+            }
+        }
+        
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+        
+        function connect() {
+            if (isConnecting) return;
+            
+            const serverUrl = document.getElementById('serverUrl').value;
+            if (!serverUrl) {
+                alert('Please enter server URL');
+                return;
+            }
+            
+            updateConnectionStatus('connecting', 'Connecting to server...');
+            
+            try {
+                ws = new WebSocket(serverUrl);
+                
+                ws.onopen = function(event) {
+                    updateConnectionStatus('connected', 'Connected to Fusion 360 server');
+                    updateResponse('🎉 Connected to remote server successfully!');
+                    
+                    // Register as browser client
+                    ws.send(JSON.stringify({
+                        type: "browser_client",
+                        client_type: "browser",
+                        message: "Browser client connected"
+                    }));
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleServerMessage(data);
+                    } catch (e) {
+                        console.error('Failed to parse message:', e);
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    updateConnectionStatus('disconnected', 'Disconnected from server');
+                    updateResponse('❌ Connection lost');
+                };
+                
+                ws.onerror = function(event) {
+                    updateConnectionStatus('disconnected', 'Connection error');
+                    updateResponse('❌ Failed to connect to server');
+                };
+                
+            } catch (e) {
+                updateConnectionStatus('disconnected', 'Invalid server URL');
+                updateResponse('❌ Invalid server URL');
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            updateConnectionStatus('disconnected', 'Disconnected');
+        }
+        
+        function handleServerMessage(data) {
+            switch(data.type) {
+                case 'welcome':
+                    updateResponse('📡 Server: ' + data.message);
+                    break;
+                    
+                case 'fusion_status':
+                    if (data.connected) {
+                        updateResponse('🎯 Fusion 360 is connected and ready!');
+                    } else {
+                        updateResponse('⚠️ Fusion 360 is not connected');
+                    }
+                    break;
+                    
+                case 'response':
+                    updateResponse('📥 Fusion 360: ' + data.result);
+                    break;
+                    
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+        
+        function sendCommand(action, data = {}) {
+            if (!isConnected || !ws) {
+                updateResponse('❌ Not connected to server');
+                return;
+            }
+            
+            const command = {
+                type: 'command',
+                action: action,
+                data: data,
+                timestamp: new Date().toISOString()
+            };
+            
+            ws.send(JSON.stringify(command));
+            updateResponse(`📤 Sent: ${action}`);
+        }
+        
+        function updateResponse(message) {
+            const responseBox = document.getElementById('responseBox');
+            const timestamp = new Date().toLocaleTimeString();
+            responseBox.innerHTML += `[${timestamp}] ${message}<br>`;
+            responseBox.scrollTop = responseBox.scrollHeight;
+        }
+        
+        // Command functions
+        function extrudeFeature() {
+            const distance = document.getElementById('extrudeDistance').value;
+            sendCommand('extrudeFeature', { distance: parseFloat(distance) });
+        }
+        
+        function createBox() {
+            const length = document.getElementById('boxLength').value;
+            const width = document.getElementById('boxWidth').value;
+            const height = document.getElementById('boxHeight').value;
+            
+            sendCommand('createBox', {
+                length: parseFloat(length),
+                width: parseFloat(width),
+                height: parseFloat(height)
+            });
+        }
+        
+        function createCylinder() {
+            const radius = document.getElementById('cylRadius').value;
+            const height = document.getElementById('cylHeight').value;
+            
+            sendCommand('createCylinder', {
+                radius: parseFloat(radius),
+                height: parseFloat(height)
+            });
+        }
+        
+        function createSphere() {
+            const radius = document.getElementById('cylRadius').value;
+            sendCommand('createSphere', { radius: parseFloat(radius) });
+        }
+        
+        function saveModel() {
+            const fileName = document.getElementById('fileName').value;
+            sendCommand('saveModel', { fileName: fileName });
+        }
+        
+        function exportSTL() {
+            const fileName = document.getElementById('fileName').value;
+            sendCommand('exportSTL', { fileName: fileName });
+        }
+        
+        function exportStep() {
+            const fileName = document.getElementById('fileName').value;
+            sendCommand('exportStep', { fileName: fileName });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateResponse('🌐 Remote control interface loaded');
+            updateResponse('👆 Click Connect to start controlling Fusion 360');
+            
+            // Auto-fill server URL if on same domain
+            if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                document.getElementById('serverUrl').value = `ws://${location.hostname}:8765`;
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (!isConnected) return;
+            
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveModel();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        sendCommand('newDocument');
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        sendCommand('fitView');
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

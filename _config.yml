@@ -1,0 +1,28 @@
+theme: minima
+title: Fusion 360 Remote Control
+description: Control Autodesk Fusion 360 remotely from any web browser
+show_downloads: true
+google_analytics: # Optional
+
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+markdown: kramdown
+highlighter: rouge
+
+# GitHub Pages settings
+repository: kai155/fusion360-control-panel
+github_username: kai155
+
+# Build settings
+sass:
+  style: compressed
+
+# Exclude from build
+exclude:
+  - __pycache__/
+  - "*.pyc"
+  - "*.bat"
+  - "*.py"
+  - HTLM.manifest
